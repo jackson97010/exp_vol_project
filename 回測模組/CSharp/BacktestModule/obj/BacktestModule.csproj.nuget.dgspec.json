@@ -52,6 +52,10 @@
               "target": "Package",
               "version": "[8.0.2, )"
             },
+            "Parquet.Net": {
+              "target": "Package",
+              "version": "[4.24.0, )"
+            },
             "YamlDotNet": {
               "target": "Package",
               "version": "[16.3.0, )"
@@ -71,6 +75,10 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.20, 8.0.20]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
               "version": "[8.0.20, 8.0.20]"
             },
             {

@@ -1,15 +1,28 @@
 {
   "version": 2,
-  "dgSpecHash": "ETYcQLPTBn4=",
+  "dgSpecHash": "Ugq2VBwxQoE=",
   "success": true,
   "projectFilePath": "C:\\Users\\user\\Documents\\_15_預估量\\exp_vol_project\\回測模組\\CSharp\\BacktestModule\\BacktestModule.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\user\\.nuget\\packages\\apache.arrow\\11.0.0\\apache.arrow.11.0.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\ironcompress\\1.5.2\\ironcompress.1.5.2.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\microsoft.data.analysis\\0.21.1\\microsoft.data.analysis.0.21.1.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.2\\microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\microsoft.io.recyclablememorystream\\3.0.0\\microsoft.io.recyclablememorystream.3.0.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\microsoft.ml.dataview\\3.0.1\\microsoft.ml.dataview.3.0.1.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\parquet.net\\4.24.0\\parquet.net.4.24.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\snappier\\1.1.6\\snappier.1.1.6.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.buffers\\4.5.1\\system.buffers.4.5.1.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.collections.immutable\\1.5.0\\system.collections.immutable.1.5.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.memory\\4.5.5\\system.memory.4.5.5.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\yamldotnet\\16.3.0\\yamldotnet.16.3.0.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\zstdsharp.port\\0.8.1\\zstdsharp.port.0.8.1.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.20\\microsoft.netcore.app.ref.8.0.20.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.20\\microsoft.windowsdesktop.app.ref.8.0.20.nupkg.sha512",
-    "C:\\Users\\user\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.20\\microsoft.aspnetcore.app.ref.8.0.20.nupkg.sha512"
+    "C:\\Users\\user\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.20\\microsoft.aspnetcore.app.ref.8.0.20.nupkg.sha512",
+    "C:\\Users\\user\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.20\\microsoft.netcore.app.host.win-x64.8.0.20.nupkg.sha512"
   ],
   "logs": []
 }
