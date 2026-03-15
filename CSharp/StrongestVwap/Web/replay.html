@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>族群排行回放系統</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; background: #f5f5f5; color: #333; }
+
+/* Header */
+.header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.header-title { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+.header-date { font-size: 16px; opacity: 0.85; font-family: 'Consolas', 'Courier New', monospace; }
+.header-config {
+    font-size: 13px;
+    opacity: 0.7;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.header-config span {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 10px;
+    border-radius: 4px;
+}
+
+/* File picker */
+.file-picker {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.file-picker.hidden { display: none; }
+.file-picker label {
+    cursor: pointer;
+    background: #1a1a2e;
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+.file-picker label:hover { background: #16213e; }
+.file-picker input[type="file"] { display: none; }
+.file-picker .file-hint { font-size: 13px; color: #888; }
+
+/* Time control bar */
+.control-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #eceff1;
+    border-bottom: 2px solid #cfd8dc;
+    padding: 12px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.time-display {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a2e;
+    min-width: 140px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+.slider-wrap {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.slider-wrap input[type="range"] {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #b0bec5;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+.slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #1a1a2e;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #1a1a2e;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.slider-time-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #78909c;
+    font-family: 'Consolas', monospace;
+    margin-top: 2px;
+}
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn {
+    background: #1a1a2e;
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Segoe UI', sans-serif;
+}
+.btn:hover { background: #16213e; }
+.btn.active { background: #e65100; }
+.speed-select {
+    padding: 5px 8px;
+    border: 1px solid #b0bec5;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+}
+.stats {
+    font-size: 14px;
+    color: #455a64;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.stats .stat-item {
+    background: #fff;
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid #cfd8dc;
+}
+.stats .stat-val {
+    font-family: 'Consolas', monospace;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+/* Main content */
+.main-content {
+    padding: 12px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* No-data message */
+.no-data {
+    text-align: center;
+    padding: 80px 20px;
+    color: #90a4ae;
+    font-size: 18px;
+}
+.no-data .icon { font-size: 48px; margin-bottom: 16px; display: block; }
+
+/* Group table */
+.group-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    table-layout: fixed;
+}
+.group-table th {
+    background: #263238;
+    color: #fff;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    position: sticky;
+    z-index: 10;
+    white-space: nowrap;
+}
+.group-table th.num-col { text-align: right; }
+.group-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 13px;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.group-table tbody tr {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.group-table tbody tr.group-row:hover { background: #e3f2fd !important; }
+.group-table tbody tr.rank-top { background: #e8f5e9; }
+.group-table tbody tr.rank-mid { background: #fff8e1; }
+.group-table tbody tr.expanded { background: #bbdefb !important; }
+
+/* Numeric cells */
+.num {
+    font-family: 'Consolas', 'Courier New', monospace;
+    text-align: right;
+}
+.pos { color: #d32f2f; }
+.neg { color: #388e3c; }
+.zero { color: #78909c; }
+
+/* Selected stocks in group row */
+.selected-stocks {
+    font-size: 12px;
+    color: #1b5e20;
+    line-height: 1.5;
+    white-space: normal;
+}
+.selected-stocks .stock-tag {
+    display: inline-block;
+    background: #c8e6c9;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin: 1px 2px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Expand indicator */
+.expand-indicator {
+    display: inline-block;
+    width: 16px;
+    font-size: 12px;
+    color: #78909c;
+    transition: transform 0.2s;
+    text-align: center;
+}
+.expanded .expand-indicator { transform: rotate(90deg); color: #1a1a2e; }
+
+/* Member detail row */
+.member-row { background: #fafafa !important; cursor: default !important; }
+.member-row:hover { background: #fafafa !important; }
+.member-row td { padding: 4px 10px; overflow: visible; }
+.member-container { padding: 6px 0; }
+.member-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #cfd8dc;
+    border-radius: 4px;
+    overflow: hidden;
+    table-layout: auto;
+}
+.member-table th {
+    background: #546e7a;
+    color: #fff;
+    font-size: 12px;
+    padding: 5px 8px;
+    text-align: left;
+    font-weight: 600;
+    position: static;
+    white-space: nowrap;
+}
+.member-table th.num-col { text-align: right; }
+.member-table td {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-bottom: 1px solid #eceff1;
+    white-space: nowrap;
+}
+.member-table tbody tr { cursor: default; }
+.member-table tbody tr:hover { background: #e3f2fd !important; }
+.member-table tbody tr.selected-member {
+    font-weight: bold;
+    background: #c8e6c9 !important;
+}
+.member-table tbody tr.selected-member:hover {
+    background: #a5d6a7 !important;
+}
+.check-mark { color: #2e7d32; font-weight: bold; }
+
+/* Disposal stock styling */
+.disposal-tag {
+    display: inline-block;
+    background: #ffcdd2;
+    color: #c62828;
+    padding: 0px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-left: 4px;
+    font-weight: 600;
+}
+.member-table tbody tr.disposal-member { background: #fff8e1 !important; }
+.member-table tbody tr.disposal-member:hover { background: #fff3c4 !important; }
+
+/* Toggle switch */
+.toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+}
+.toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: #b0bec5;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.2s;
+}
+.toggle-wrap input { display: none; }
+.toggle-wrap input:checked + .toggle-switch { background: #e65100; }
+.toggle-wrap input:checked + .toggle-switch::after { left: 18px; }
+
+/* Invalid group styling */
+.group-invalid { opacity: 0.55; }
+.group-invalid td { color: #90a4ae; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .header { padding: 12px 16px; }
+    .control-bar { padding: 10px 16px; }
+    .time-display { font-size: 24px; min-width: 110px; }
+    .main-content { padding: 12px 8px; }
+    .group-table th, .group-table td { padding: 5px 6px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- File picker -->
+<div class="file-picker" id="filePicker">
+    <label for="fileInput">選擇 JSON 檔案</label>
+    <input type="file" id="fileInput" accept=".json">
+    <span class="file-hint" id="fileHint">或自動載入同目錄下的 replay_data.json</span>
+</div>
+
+<!-- Header -->
+<div class="header" id="headerBar" style="display:none;">
+    <div>
+        <div class="header-title">族群排行回放系統</div>
+        <div class="header-date" id="headerDate"></div>
+    </div>
+    <div class="header-config" id="headerConfig"></div>
+</div>
+
+<!-- Time control bar -->
+<div class="control-bar" id="controlBar" style="display:none;">
+    <div class="time-display" id="timeDisplay">09:00:00</div>
+    <div style="flex:1; min-width:200px;">
+        <div class="slider-wrap">
+            <input type="range" id="slider" min="0" max="16200" value="0" step="1">
+        </div>
+        <div class="slider-time-labels">
+            <span>09:00</span>
+            <span>10:00</span>
+            <span>11:00</span>
+            <span>12:00</span>
+            <span>13:00</span>
+            <span>13:30</span>
+        </div>
+    </div>
+    <div class="controls">
+        <button class="btn" id="btnPlay" title="Space">&#9654; 播放</button>
+        <select class="speed-select" id="speedSelect" title="播放速度">
+            <option value="1">1x</option>
+            <option value="2">2x</option>
+            <option value="5">5x</option>
+            <option value="10">10x</option>
+            <option value="30" selected>30x</option>
+        </select>
+    </div>
+    <div class="stats">
+        <span class="stat-item">有效族群: <span class="stat-val" id="statValidGroups">0</span></span>
+        <span class="stat-item">選中標的: <span class="stat-val" id="statSelectedStocks">0</span></span>
+        <label class="toggle-wrap stat-item" title="排除處置股後重新計算族群排名">
+            <input type="checkbox" id="chkExcludeDisposal">
+            <span class="toggle-switch"></span>
+            排除處置股
+        </label>
+        <label class="toggle-wrap stat-item" title="排除股價 >= 1000 元的標的">
+            <input type="checkbox" id="chkExcludeHighPrice">
+            <span class="toggle-switch"></span>
+            排除千元股
+        </label>
+    </div>
+</div>
+
+<!-- Main content -->
+<div class="main-content" id="mainContent">
+    <div class="no-data" id="noDataMsg">
+        <span class="icon">&#128202;</span>
+        請載入 JSON 資料檔案以開始回放
+    </div>
+    <table class="group-table" id="groupTable" style="display:none;">
+        <colgroup>
+            <col style="width:28px;">
+            <col style="width:42px;">
+            <col style="width:140px;">
+            <col style="width:90px;">
+            <col style="width:76px;">
+            <col style="width:100px;">
+            <col style="width:54px;">
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th></th>
+                <th class="num-col">排名</th>
+                <th>族群</th>
+                <th class="num-col">平均漲幅%</th>
+                <th class="num-col">成交值比</th>
+                <th class="num-col">月均成交值</th>
+                <th class="num-col">成員數</th>
+                <th>選中標的</th>
+            </tr>
+        </thead>
+        <tbody id="groupTableBody"></tbody>
+    </table>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ===== State =====
+    let data = null;
+    let snapshots = [];
+    let currentSnapshot = null;
+    let playing = false;
+    let speed = 30;
+    let expandedGroup = null;
+    let animFrameId = null;
+    let lastFrameTime = 0;
+    let accumulatedTime = 0;
+    let excludeDisposal = false;
+    let excludeHighPrice = false;
+
+    // ===== DOM refs =====
+    const filePicker = document.getElementById('filePicker');
+    const fileInput = document.getElementById('fileInput');
+    const fileHint = document.getElementById('fileHint');
+    const headerBar = document.getElementById('headerBar');
+    const headerDate = document.getElementById('headerDate');
+    const headerConfig = document.getElementById('headerConfig');
+    const controlBar = document.getElementById('controlBar');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const slider = document.getElementById('slider');
+    const btnPlay = document.getElementById('btnPlay');
+    const speedSelect = document.getElementById('speedSelect');
+    const statValidGroups = document.getElementById('statValidGroups');
+    const statSelectedStocks = document.getElementById('statSelectedStocks');
+    const mainContent = document.getElementById('mainContent');
+    const noDataMsg = document.getElementById('noDataMsg');
+    const groupTable = document.getElementById('groupTable');
+    const groupTableBody = document.getElementById('groupTableBody');
+
+    // ===== Format helpers =====
+    function fmtPct(v) {
+        if (v == null || isNaN(v)) return '--';
+        let pct = (v * 100).toFixed(2);
+        return (v >= 0 ? '+' : '') + pct + '%';
+    }
+
+    function fmtPctClass(v) {
+        if (v == null || isNaN(v)) return 'zero';
+        if (v > 0) return 'pos';
+        if (v < 0) return 'neg';
+        return 'zero';
+    }
+
+    function fmtPrice(v) {
+        if (v == null || isNaN(v)) return '--';
+        return v.toFixed(2);
+    }
+
+    function fmtAmount(v) {
+        if (v == null || isNaN(v)) return '--';
+        if (v >= 1e8) return (v / 1e8).toFixed(1) + '億';
+        if (v >= 1e4) return (v / 1e4).toFixed(0) + '萬';
+        return v.toFixed(0);
+    }
+
+    function fmtRatio(v) {
+        if (v == null || isNaN(v)) return '--';
+        return v.toFixed(2);
+    }
+
+    function secondsToTime(s) {
+        s = Math.max(0, Math.min(s, 16200));
+        let totalSec = s;
+        let h = Math.floor(totalSec / 3600) + 9;
+        let m = Math.floor((totalSec % 3600) / 60);
+        let sec = totalSec % 60;
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    }
+
+    // ===== Binary search: find last snapshot with totalSeconds <= target =====
+    function findSnapshot(targetSeconds) {
+        if (!snapshots || snapshots.length === 0) return null;
+        let lo = 0, hi = snapshots.length - 1;
+        let result = -1;
+        while (lo <= hi) {
+            let mid = (lo + hi) >>> 1;
+            if (snapshots[mid].totalSeconds <= targetSeconds) {
+                result = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        return result >= 0 ? snapshots[result] : snapshots[0];
+    }
+
+    // ===== Recompute snapshot excluding disposal stocks =====
+    function recomputeSnapshot(snapshot) {
+        if (!snapshot || !data || !data.config) return snapshot;
+        let cfg = data.config;
+        let memberMinVal = cfg.member_min_month_trading_val || 200000000;
+        let groupMinVal = cfg.group_min_month_trading_val || 3000000000;
+        let groupMinVR = cfg.group_min_val_ratio || 1.2;
+        let isWeighted = cfg.is_weighted_avg || false;
+        let topN = cfg.group_valid_top_n || 20;
+        let topRankThresh = cfg.top_group_rank_threshold || 10;
+        let topMaxSel = cfg.top_group_max_select || 1;
+        let normalMaxSel = cfg.normal_group_max_select || 1;
+        let minVwapPct = cfg.entry_min_vwap_pct_chg || 0.04;
+
+        let newGroups = [];
+        for (let gi = 0; gi < (snapshot.groups || []).length; gi++) {
+            let og = snapshot.groups[gi];
+            // Filter members by active toggles
+            let validMembers = (og.members || []).filter(function(m) {
+                if (excludeDisposal && m.isDisposal) return false;
+                if (excludeHighPrice && m.lastPrice >= 1000) return false;
+                if (m.avgAmount20d != null && m.avgAmount20d < memberMinVal) return false;
+                if (m.lastPrice <= 0) return false;
+                return true;
+            });
+            if (validMembers.length === 0) continue;
+
+            // Recalculate avg price change
+            let avgPct;
+            if (isWeighted) {
+                let sumPct = 0, sumWeight = 0;
+                for (let j = 0; j < validMembers.length; j++) {
+                    let w = validMembers[j].avgAmount20d || 0;
+                    sumPct += (validMembers[j].priceChangePct || 0) * w;
+                    sumWeight += w;
+                }
+                avgPct = sumWeight > 0 ? sumPct / sumWeight : 0;
+            } else {
+                let sumPct = 0;
+                for (let j = 0; j < validMembers.length; j++) {
+                    sumPct += validMembers[j].priceChangePct || 0;
+                }
+                avgPct = sumPct / validMembers.length;
+            }
+
+            // Recalculate total monthly val
+            let totalMonthlyVal = 0;
+            for (let j = 0; j < validMembers.length; j++) {
+                totalMonthlyVal += validMembers[j].avgAmount20d || 0;
+            }
+
+            // Check group validity (same as Python create_snapshot)
+            if (totalMonthlyVal < groupMinVal || og.valRatio < groupMinVR) continue;
+
+            // Clone members with new rankings
+            let clonedMembers = validMembers.map(function(m) {
+                return {
+                    stockId: m.stockId,
+                    stockName: m.stockName,
+                    priceChangePct: m.priceChangePct,
+                    vwapChangePct: m.vwapChangePct,
+                    lastPrice: m.lastPrice,
+                    prevClose: m.prevClose,
+                    vwap: m.vwap,
+                    dayHigh: m.dayHigh,
+                    cumulativeValue: m.cumulativeValue,
+                    avgAmount20d: m.avgAmount20d,
+                    isDisposal: m.isDisposal,
+                    rankInGroup: 0,
+                    isSelected: false,
+                };
+            });
+            // Sort by vwapChangePct desc
+            clonedMembers.sort(function(a, b) { return (b.vwapChangePct || 0) - (a.vwapChangePct || 0); });
+            for (let j = 0; j < clonedMembers.length; j++) {
+                clonedMembers[j].rankInGroup = j + 1;
+            }
+
+            newGroups.push({
+                groupName: og.groupName,
+                rank: 0,
+                avgPriceChangePct: avgPct,
+                valRatio: og.valRatio,
+                totalMonthlyVal: totalMonthlyVal,
+                validMemberCount: validMembers.length,
+                isValid: true,
+                members: clonedMembers,
+            });
+        }
+
+        // Sort groups by avgPriceChangePct desc and assign rank
+        newGroups.sort(function(a, b) { return b.avgPriceChangePct - a.avgPriceChangePct; });
+        let selectedStockIds = {};
+        for (let i = 0; i < newGroups.length; i++) {
+            newGroups[i].rank = i + 1;
+            if (newGroups[i].rank > topN) continue;
+            let maxSel = newGroups[i].rank <= topRankThresh ? topMaxSel : normalMaxSel;
+            for (let j = 0; j < newGroups[i].members.length; j++) {
+                let m = newGroups[i].members[j];
+                if (m.rankInGroup <= maxSel && (m.vwapChangePct || 0) >= minVwapPct) {
+                    m.isSelected = true;
+                    selectedStockIds[m.stockId] = true;
+                }
+            }
+        }
+
+        return {
+            time: snapshot.time,
+            totalSeconds: snapshot.totalSeconds,
+            groups: newGroups,
+            validGroupCount: newGroups.length,
+            totalSelectedStocks: Object.keys(selectedStockIds).length,
+        };
+    }
+
+    // ===== Row pool management =====
+    let groupRowPool = [];
+    let memberRowPool = [];
+
+    function getOrCreateGroupRow(index) {
+        while (groupRowPool.length <= index) {
+            let tr = document.createElement('tr');
+            tr.className = 'group-row';
+            // Cells: expand indicator, rank, name, avgPct, valRatio, totalMonthlyVal, memberCount, selected
+            for (let c = 0; c < 8; c++) {
+                let td = document.createElement('td');
+                if (c === 0) { td.innerHTML = '<span class="expand-indicator">&#9654;</span>'; td.style.textAlign = 'center'; }
+                if (c === 1 || c === 3 || c === 4 || c === 5 || c === 6) { td.className = 'num'; }
+                if (c === 7) { td.className = 'selected-stocks'; }
+                tr.appendChild(td);
+            }
+            groupRowPool.push(tr);
+        }
+        return groupRowPool[index];
+    }
+
+    function getOrCreateMemberDetailRow(index) {
+        while (memberRowPool.length <= index) {
+            let tr = document.createElement('tr');
+            tr.className = 'member-row';
+            let td = document.createElement('td');
+            td.colSpan = 8;
+            let container = document.createElement('div');
+            container.className = 'member-container';
+            td.appendChild(container);
+            tr.appendChild(td);
+            memberRowPool.push(tr);
+        }
+        return memberRowPool[index];
+    }
+
+    // ===== Render snapshot =====
+    function renderSnapshot(snapshot) {
+        if (!snapshot) return;
+        currentSnapshot = snapshot;
+
+        // Recompute if any filter toggle is active
+        let displaySnapshot = (excludeDisposal || excludeHighPrice) ? recomputeSnapshot(snapshot) : snapshot;
+
+        // Time display
+        timeDisplay.textContent = displaySnapshot.time || secondsToTime(displaySnapshot.totalSeconds);
+
+        // Stats
+        statValidGroups.textContent = displaySnapshot.validGroupCount != null ? displaySnapshot.validGroupCount : '--';
+        statSelectedStocks.textContent = displaySnapshot.totalSelectedStocks != null ? displaySnapshot.totalSelectedStocks : '--';
+
+        // Groups
+        let groups = displaySnapshot.groups || [];
+
+        // Clear tbody
+        groupTableBody.innerHTML = '';
+
+        for (let i = 0; i < groups.length; i++) {
+            let g = groups[i];
+            let tr = getOrCreateGroupRow(i);
+            let cells = tr.children;
+            let isExpanded = expandedGroup === g.groupName;
+
+            // Row class
+            tr.className = 'group-row';
+            if (!g.isValid) tr.className += ' group-invalid';
+            if (g.rank <= 10 && g.isValid) tr.className += ' rank-top';
+            else if (g.rank <= 20 && g.isValid) tr.className += ' rank-mid';
+            if (isExpanded) tr.className += ' expanded';
+
+            // Click handler
+            tr.onclick = (function(name) { return function() { toggleGroupExpand(name); }; })(g.groupName);
+
+            // expand indicator
+            cells[0].firstChild.innerHTML = isExpanded ? '&#9660;' : '&#9654;';
+
+            // rank
+            cells[1].textContent = g.rank != null ? g.rank : '--';
+
+            // name
+            cells[2].textContent = g.groupName || '--';
+
+            // avgPct
+            cells[3].textContent = fmtPct(g.avgPriceChangePct);
+            cells[3].className = 'num ' + fmtPctClass(g.avgPriceChangePct);
+
+            // valRatio
+            cells[4].textContent = fmtRatio(g.valRatio);
+            cells[4].className = 'num';
+
+            // totalMonthlyVal
+            cells[5].textContent = fmtAmount(g.totalMonthlyVal);
+            cells[5].className = 'num';
+
+            // memberCount
+            cells[6].textContent = g.validMemberCount != null ? g.validMemberCount : '--';
+
+            // selected stocks
+            let selectedMembers = (g.members || []).filter(function(m) { return m.isSelected; });
+            if (selectedMembers.length > 0) {
+                let html = '';
+                for (let s = 0; s < selectedMembers.length; s++) {
+                    html += '<span class="stock-tag">' + escapeHtml(selectedMembers[s].stockId) + '(' + escapeHtml(selectedMembers[s].stockName || '') + ')</span>';
+                }
+                cells[7].innerHTML = html;
+            } else {
+                cells[7].innerHTML = '<span style="color:#bdbdbd;">—</span>';
+            }
+
+            groupTableBody.appendChild(tr);
+
+            // Member detail row
+            if (isExpanded) {
+                let memberTr = getOrCreateMemberDetailRow(i);
+                let container = memberTr.querySelector('.member-container');
+                renderMemberDetail(container, g.members || []);
+                groupTableBody.appendChild(memberTr);
+            }
+        }
+
+        // Show table if groups exist
+        if (groups.length > 0) {
+            groupTable.style.display = '';
+            noDataMsg.style.display = 'none';
+        } else {
+            groupTable.style.display = 'none';
+            noDataMsg.style.display = '';
+            noDataMsg.innerHTML = '<span class="icon">&#128202;</span>此時間點無族群資料';
+        }
+    }
+
+    function renderMemberDetail(container, members) {
+        // Sort by rankInGroup (ascending)
+        let sorted = members.slice().sort(function(a, b) {
+            return (a.rankInGroup || 999) - (b.rankInGroup || 999);
+        });
+
+        // Detect which optional fields are available
+        let hasVwapPct = sorted.some(function(m) { return m.vwapChangePct != null; });
+        let hasVwap = sorted.some(function(m) { return m.vwap != null; });
+        let hasDayHigh = sorted.some(function(m) { return m.dayHigh != null; });
+        let hasCumVal = sorted.some(function(m) { return m.cumulativeValue != null; });
+        let hasAvg20d = sorted.some(function(m) { return m.avgAmount20d != null; });
+
+        let html = '<table class="member-table"><thead><tr>' +
+            '<th class="num-col">#</th>' +
+            '<th>代碼</th>' +
+            '<th>名稱</th>' +
+            (hasVwapPct ? '<th class="num-col">VWAP漲幅%</th>' : '') +
+            '<th class="num-col">漲幅%</th>' +
+            '<th class="num-col">現價</th>' +
+            '<th class="num-col">昨收</th>' +
+            (hasVwap ? '<th class="num-col">VWAP</th>' : '') +
+            (hasDayHigh ? '<th class="num-col">日高</th>' : '') +
+            (hasCumVal ? '<th class="num-col">累計成交值</th>' : '') +
+            (hasAvg20d ? '<th class="num-col">月均成交值</th>' : '') +
+            '<th style="text-align:center;">選中</th>' +
+            '</tr></thead><tbody>';
+
+        for (let i = 0; i < sorted.length; i++) {
+            let m = sorted[i];
+            let rowClass = m.isSelected ? 'selected-member' : (m.isDisposal ? 'disposal-member' : '');
+            let pctClass = fmtPctClass(m.priceChangePct);
+            let vwapPctClass = fmtPctClass(m.vwapChangePct);
+            let disposalTag = m.isDisposal ? '<span class="disposal-tag">處置</span>' : '';
+            html += '<tr class="' + rowClass + '">' +
+                '<td class="num">' + (m.rankInGroup != null ? m.rankInGroup : (i + 1)) + '</td>' +
+                '<td>' + escapeHtml(m.stockId || '') + '</td>' +
+                '<td>' + escapeHtml(m.stockName || '') + disposalTag + '</td>' +
+                (hasVwapPct ? '<td class="num ' + vwapPctClass + '">' + fmtPct(m.vwapChangePct) + '</td>' : '') +
+                '<td class="num ' + pctClass + '">' + fmtPct(m.priceChangePct) + '</td>' +
+                '<td class="num">' + fmtPrice(m.lastPrice) + '</td>' +
+                '<td class="num">' + fmtPrice(m.prevClose) + '</td>' +
+                (hasVwap ? '<td class="num">' + fmtPrice(m.vwap) + '</td>' : '') +
+                (hasDayHigh ? '<td class="num">' + fmtPrice(m.dayHigh) + '</td>' : '') +
+                (hasCumVal ? '<td class="num">' + fmtAmount(m.cumulativeValue) + '</td>' : '') +
+                (hasAvg20d ? '<td class="num">' + fmtAmount(m.avgAmount20d) + '</td>' : '') +
+                '<td style="text-align:center;">' + (m.isSelected ? '<span class="check-mark">&#10003;</span>' : '') + '</td>' +
+                '</tr>';
+        }
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ===== Group expand/collapse =====
+    function toggleGroupExpand(groupName) {
+        if (expandedGroup === groupName) {
+            expandedGroup = null;
+        } else {
+            expandedGroup = groupName;
+        }
+        renderSnapshot(currentSnapshot);
+    }
+
+    // ===== Playback =====
+    function togglePlay() {
+        if (playing) {
+            pausePlayback();
+        } else {
+            startPlayback();
+        }
+    }
+
+    function startPlayback() {
+        if (parseInt(slider.value) >= parseInt(slider.max)) {
+            slider.value = 0;
+        }
+        playing = true;
+        btnPlay.innerHTML = '&#9208; 暫停';
+        btnPlay.classList.add('active');
+        lastFrameTime = 0;
+        accumulatedTime = 0;
+        animFrameId = requestAnimationFrame(playLoop);
+    }
+
+    function pausePlayback() {
+        playing = false;
+        btnPlay.innerHTML = '&#9654; 播放';
+        btnPlay.classList.remove('active');
+        if (animFrameId) {
+            cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+        }
+    }
+
+    function playLoop(timestamp) {
+        if (!playing) return;
+
+        if (lastFrameTime === 0) {
+            lastFrameTime = timestamp;
+            animFrameId = requestAnimationFrame(playLoop);
+            return;
+        }
+
+        let deltaMs = timestamp - lastFrameTime;
+        lastFrameTime = timestamp;
+
+        // Cap delta to avoid huge jumps when tab is backgrounded
+        if (deltaMs > 200) deltaMs = 200;
+
+        // Accumulate time: speed multiplier converts real-time to simulated seconds
+        accumulatedTime += deltaMs * speed / 1000;
+
+        if (accumulatedTime >= 1) {
+            let advance = Math.floor(accumulatedTime);
+            accumulatedTime -= advance;
+
+            let newVal = Math.min(parseInt(slider.value) + advance, parseInt(slider.max));
+            slider.value = newVal;
+            let snap = findSnapshot(newVal);
+            if (snap) renderSnapshot(snap);
+
+            // Update time display from slider position even if no snapshot change
+            timeDisplay.textContent = secondsToTime(newVal);
+
+            if (newVal >= parseInt(slider.max)) {
+                pausePlayback();
+                return;
+            }
+        }
+
+        animFrameId = requestAnimationFrame(playLoop);
+    }
+
+    // ===== Slider handler =====
+    slider.oninput = function() {
+        let seconds = parseInt(slider.value);
+        timeDisplay.textContent = secondsToTime(seconds);
+        let snap = findSnapshot(seconds);
+        if (snap) renderSnapshot(snap);
+    };
+
+    // ===== Speed selector =====
+    speedSelect.onchange = function() {
+        speed = parseInt(speedSelect.value);
+    };
+
+    // ===== Exclude disposal toggle =====
+    document.getElementById('chkExcludeDisposal').onchange = function() {
+        excludeDisposal = this.checked;
+        if (currentSnapshot) renderSnapshot(currentSnapshot);
+    };
+
+    // ===== Exclude high price toggle =====
+    document.getElementById('chkExcludeHighPrice').onchange = function() {
+        excludeHighPrice = this.checked;
+        if (currentSnapshot) renderSnapshot(currentSnapshot);
+    };
+
+    // ===== Play button =====
+    btnPlay.onclick = function() {
+        togglePlay();
+    };
+
+    // ===== Keyboard shortcuts =====
+    document.onkeydown = function(e) {
+        // Don't capture when typing in inputs
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+        if (e.code === 'Space') {
+            e.preventDefault();
+            togglePlay();
+        }
+        if (e.code === 'ArrowRight') {
+            e.preventDefault();
+            let step = e.shiftKey ? 30 : (e.ctrlKey ? 60 : 1);
+            let newVal = Math.min(parseInt(slider.value) + step, parseInt(slider.max));
+            slider.value = newVal;
+            timeDisplay.textContent = secondsToTime(newVal);
+            let snap = findSnapshot(newVal);
+            if (snap) renderSnapshot(snap);
+        }
+        if (e.code === 'ArrowLeft') {
+            e.preventDefault();
+            let step = e.shiftKey ? 30 : (e.ctrlKey ? 60 : 1);
+            let newVal = Math.max(parseInt(slider.value) - step, 0);
+            slider.value = newVal;
+            timeDisplay.textContent = secondsToTime(newVal);
+            let snap = findSnapshot(newVal);
+            if (snap) renderSnapshot(snap);
+        }
+    };
+
+    // ===== File input handler =====
+    fileInput.onchange = function(e) {
+        let file = e.target.files[0];
+        if (file) {
+            fileHint.textContent = '載入中: ' + file.name + '...';
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    data = JSON.parse(ev.target.result);
+                    fileHint.textContent = '已載入: ' + file.name;
+                    initReplay();
+                } catch (err) {
+                    fileHint.textContent = '解析失敗: ' + err.message;
+                    fileHint.style.color = '#d32f2f';
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+
+    // ===== Init replay =====
+    function initReplay() {
+        if (!data) return;
+
+        snapshots = data.snapshots || [];
+
+        // Sort snapshots by totalSeconds (should already be sorted, but ensure)
+        snapshots.sort(function(a, b) { return a.totalSeconds - b.totalSeconds; });
+
+        // Set slider range
+        if (snapshots.length > 0) {
+            slider.max = snapshots[snapshots.length - 1].totalSeconds;
+        } else {
+            slider.max = 16200;
+        }
+        slider.value = 0;
+
+        // Update header
+        headerBar.style.display = '';
+        headerDate.textContent = data.date || '--';
+
+        let cfg = data.config || {};
+        let configHtml = '';
+        // Support both camelCase (C#) and snake_case (Python) keys
+        let isWeighted = cfg.isWeightedAvg != null ? cfg.isWeightedAvg : cfg.is_weighted_avg;
+        let minPctChg = cfg.groupMinAvgPctChg != null ? cfg.groupMinAvgPctChg : cfg.group_min_avg_pct_chg;
+        let minValRatio = cfg.groupMinValRatio != null ? cfg.groupMinValRatio : cfg.group_min_val_ratio;
+        let topN = cfg.groupValidTopN != null ? cfg.groupValidTopN : cfg.group_valid_top_n;
+        configHtml += '<span>' + (isWeighted ? '加權平均' : '等權重') + '</span>';
+        if (minPctChg != null) {
+            configHtml += '<span>最低漲幅: ' + (minPctChg * 100).toFixed(1) + '%</span>';
+        }
+        if (minValRatio != null) {
+            configHtml += '<span>最低成交比: ' + Number(minValRatio).toFixed(1) + '</span>';
+        }
+        if (topN != null) {
+            configHtml += '<span>Top N: ' + topN + '</span>';
+        }
+        headerConfig.innerHTML = configHtml;
+
+        // Show controls
+        controlBar.style.display = '';
+        noDataMsg.style.display = 'none';
+
+        // Update sticky header top based on actual control bar height
+        updateStickyTop();
+
+        // Render first snapshot
+        if (snapshots.length > 0) {
+            renderSnapshot(snapshots[0]);
+        }
+
+        // Minimize file picker after successful load
+        filePicker.classList.add('hidden');
+    }
+
+    // ===== Dynamically set sticky header top =====
+    function updateStickyTop() {
+        let barHeight = controlBar.offsetHeight;
+        let ths = groupTable.querySelectorAll('thead th');
+        for (let i = 0; i < ths.length; i++) {
+            ths[i].style.top = barHeight + 'px';
+        }
+    }
+    window.addEventListener('resize', function() {
+        if (controlBar.style.display !== 'none') updateStickyTop();
+    });
+
+    // ===== On page load, try to fetch default file =====
+    window.onload = async function() {
+        try {
+            let resp = await fetch('replay_data.json');
+            if (resp.ok) {
+                let text = await resp.text();
+                data = JSON.parse(text);
+                fileHint.textContent = '已自動載入 replay_data.json';
+                initReplay();
+            } else {
+                fileHint.textContent = '未找到 replay_data.json，請手動選擇檔案';
+            }
+        } catch (e) {
+            fileHint.textContent = '請選擇 JSON 檔案以開始';
+        }
+    };
+
+    // Initialize speed from dropdown default
+    speed = parseInt(speedSelect.value);
+
+})();
+</script>
+</body>
+</html>

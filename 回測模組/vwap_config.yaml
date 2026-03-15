@@ -1,0 +1,24 @@
+vwap:
+  is_buy: true
+  total_volume_quote: 10000000    # 總買入金額 (TWD)，例：1000 萬
+  price_spread_levels: 3          # 委賣深度查詢檔位數 (1~5，按台股 tick 規則)
+  start_time: "09:00:00"          # 開始執行時間
+  end_time: "13:25:00"            # 結束時間 (收盤前 5 分鐘)
+  max_single_order_lots: 50       # 單筆最大張數
+  min_order_lots: 1               # 單筆最小張數
+
+adaptive:
+  enabled: true
+  ato_end_time: "09:05:00"        # ATO 期間結束時間
+  volume_lookback_days: 20        # 用幾天歷史訓練迴歸
+  mo_lo_lookback_ticks: 100       # MO/LO 計算的 rolling window
+  mo_lo_threshold: 0.5            # MO ratio > 此值 → taker
+  order_start_time: "09:10:00"    # 開始下單時間（等 ATO 量穩定後）
+
+output:
+  output_path: "D:/回測結果/VWAP"
+  generate_html: true
+  generate_png: true
+
+close_prices:
+  file: "close.parquet"

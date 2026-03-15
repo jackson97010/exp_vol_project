@@ -1,0 +1,58 @@
+strategy:
+  market_rally_disable_threshold: 0.2
+  market_open_min_chg: 0.0
+
+signal_a:
+  signal_a_enabled: false   # Mode E: bypass Signal A, direct entry on group selection
+
+strong_group:
+  strong_group_enabled: true
+  member_min_month_trading_val: 300000000
+  group_min_month_trading_val: 3000000000
+  group_min_avg_pct_chg: -999       # No avg change filter (allow negative groups)
+  group_min_val_ratio: 0.0          # No val ratio filter (too early in session)
+  is_weighted_avg: false
+  group_valid_top_n: 5                  # Only top 5 groups
+  top_group_rank_threshold: 5           # All 5 groups are "top"
+  top_group_max_select: 3              # Will be overridden by dynamic logic
+  normal_group_max_select: 2
+  entry_min_vwap_pct_chg: 0.0          # No VWAP change threshold
+  require_raw_m1: false                 # Allow multiple members
+  member_cond1_enabled: false
+  member_cond2_enabled: false
+  member_cond4_enabled: false
+  exclude_prev_limit_up_from_rank: false
+  exclude_disposition_from_rank: true   # Exclude disposition stocks from ranking
+
+  # Mode E: dynamic member selection
+  mode_e_enabled: true
+  mode_e_large_group_threshold: 5      # >= 5 members -> select 3
+  mode_e_large_group_select: 3
+  mode_e_small_group_select: 2         # < 5 members -> select 2
+  mode_e_limit_up_cascade: true        # Cascade to next member when limit-up
+  mode_e_max_limit_up_skip: 5          # Stop selecting after 5 limit-up skips total
+
+order:
+  position_cash: 10000000
+  disposition_stocks_enabled: false     # Block disposition stocks
+  filter_prev_day_limit_up: false
+  max_entry_price: 1000
+  entry_time_limit: "09:20:00"         # Entry window end
+
+  # Mode E exit: fixed % from entry price, with 1.2% stop loss
+  mode_e_exit: true
+  stop_loss_enabled: true
+  stop_loss_pct: 1.2                    # -1.2% from entry price
+  bailout_enabled: false                # No bailout
+  exit_time_limit: "13:00:00"          # 13:00 close all
+
+  # Mode E take-profit: based on entry price
+  mode_e_tp_base: "entry_price"         # TP based on entry price (not day high)
+  take_profit_splits: 4
+  take_profit_pcts: [0.012, 0.016, 0.02]   # +1.2%, +1.6%, +2.0%
+  take_profit_ratios: [0.2, 0.2, 0.2]       # 20%, 20%, 20%
+  reserve_limit_up_splits: 1
+  reserve_limit_up_ratio: 0.4                # 40% at limit-up
+
+  entry_start_time: "09:05:00"
+  entry_end_time: "09:20:00"

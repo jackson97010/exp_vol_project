@@ -1,0 +1,303 @@
+
+# 策略參數
+strategy:
+  # ============================================================
+  # 策略模式選擇
+  # ============================================================
+  # "A" = 力竭停利策略（原有策略）
+  # "B" = 簡單趨勢策略（抱波段）
+  strategy_mode: "B"
+
+  # 策略時間（簡化版）
+  # 進場條件：時間 >= 09:09 + 價格 > 平盤 + Day High 突破 + 量能符合
+  entry_start_time: "09:09:00"         # 進場開始時間（此時間後才允許進場）
+  entry_cutoff_time: "13:00:00"        # 進場截止時間（此時間後不再進場）
+
+#['6770', '2408', '3167', '2464', '4542']
+
+  # 進場設定
+  entry_cooldown: 30.0       # 進場冷卻時間（秒）
+
+  # 平盤檢查設定（進場前檢查）
+  above_open_check_enabled: false  # 是否需要價格高於平盤才能進場 (true=需要, false=不需要)
+
+  # 五檔條件（進場前檢查）
+  # 注意：數據中bid_ask_ratio = 委賣/委買，上漲時此值 < 1.0
+  # 設為0表示禁用此條件
+  ask_bid_ratio_threshold: 1.0 # 委賣總量/委買總量 需 > 此值（設為0禁用）
+
+  # 大量搓合條件（進場前檢查）
+  massive_matching_enabled: true       # 是否啟用大量搓合條件
+  massive_matching_amount: 5_0000_000   # 前1秒外盤成交金額閾值（100萬元）- 當use_dynamic_liquidity_threshold=false時使用
+
+  # 動態流動性門檻設定（從parquet檔案讀取每日個股進場金額上限）
+  use_dynamic_liquidity_threshold: true  # 是否使用動態流動性門檻（true=使用parquet檔案，false=使用固定massive_matching_amount）
+  dynamic_liquidity_threshold_file: "daily_liquidity_threshold.parquet"  # 流動性門檻檔案路徑（相對於專案根目錄或絕對路徑）
+  dynamic_liquidity_multiplier: 1.0  # 流動性門檻係數（parquet已是門檻值，直接使用）
+  dynamic_liquidity_threshold_cap: 50_000_000  # 流動性門檻上限（5000萬），防止過大的門檻
+
+  # 買盤出量條件（進場前檢查）
+  ratio_entry_enabled: true            # 是否啟用 ratio 進場條件
+  ratio_entry_threshold: 3    # ratio > 此值才能進場
+
+
+  # 區間漲幅濾網（進場前檢查）
+  # 避免在急拉一大段後才進場
+  interval_pct_filter_enabled: true    # 是否啟用區間漲幅濾網
+  interval_pct_minutes: 5              # 檢查幾分鐘內的漲幅（可選: 2, 3, 5）
+  interval_pct_threshold: 3.0        # 區間漲幅上限（%），超過此值不進場
+
+  # ============================================================
+  # 突破品質檢查設定（進場前檢查）
+  # ============================================================
+  # 檢查Day High突破時是否有大單敲過去
+  breakout_quality_check_enabled: false # 是否啟用突破品質檢查
+  breakout_min_volume: 10              # 突破時最小成交量（張）
+  breakout_min_ask_eat_ratio: 0.25     # 最少要吃掉賣檔的比例（25%）
+  breakout_absolute_large_volume: 50   # 絕對大單門檻（張）
+
+  # ============================================================
+  # 小單推升過濾設定（舊策略，預設關閉）
+  # ============================================================
+  # 避免進場時遇到連續小單推升的假突破
+  small_order_filter_enabled: false    # 是否啟用小單過濾（改為關閉）
+  small_order_check_trades: 30         # 檢查最近N筆交易
+  small_order_threshold: 3             # ≤3張視為小單
+  tiny_order_threshold: 2              # ≤2張視為極小單
+  single_order_threshold: 1            # 1張單
+
+  # 過濾門檻（滿足任一即拒絕進場）
+  small_order_ratio_limit: 0.8         # 小單(≤3張)比例上限 80%
+  tiny_order_ratio_limit: 0.5          # 極小單(≤2張)比例上限 50%
+  single_order_ratio_limit: 0.4        # 1張單比例上限 40%
+
+  # 大單確認（選用，增加進場信心）
+  require_large_order_confirmation: false  # 是否需要大單確認
+  large_order_threshold: 20                # ≥20張視為大單
+  min_large_orders: 2                      # 至少需要幾筆大單
+
+  # 10分鐘低點回升檢查（進場前檢查）
+  # 避免在已經反彈太多後才進場
+  low_10min_filter_enabled: false      # 是否啟用 10 分鐘低點檢查（預設關閉）
+  low_10min_threshold: 4.0             # 相對 10 分鐘低點的最大漲幅（%）
+
+  # 進場 Buffer 機制（Day High 突破後的等待期）
+  # 解決高頻交易中 ratio 累積延遲的問題
+  entry_buffer_enabled: true           # 是否啟用進場 buffer
+  entry_buffer_milliseconds: 100      # Day High 突破後等待的毫秒數（從 20ms 調整為 100ms）
+
+  # 再進場條件：外盤金額需大於首次進場
+  reentry: false
+  time_settings: "3s"
+
+  # 輸出路徑設定
+  output_path: "D:/回測結果/C#版本"  # 回測結果輸出目錄 (C# 版本獨立資料夾)
+
+  # 保護期
+  grace_period: 3.0          # 保護期（進場後 N 秒內不判斷停損）
+
+
+  # ============================================================
+  # 停損條件
+  # ============================================================
+  # 條件1: 價格停損（相對進場價往下 N tick）
+  price_stop_loss_ticks: 3
+
+  # 條件2: 動能停損（進場後 N 秒內，外盤累積成交金額 < X 則停損）
+  momentum_stop_loss_seconds: 15.0  # 基本檢查時間窗口（15秒）
+  momentum_stop_loss_seconds_extended: 30.0  # 延長檢查時間窗口（股本>50e 或價格 100~500 時使用）
+  momentum_stop_loss_amount: 5000000  # 外盤累積成交金額閾值（500萬）
+
+  # 延長動能停損條件
+  momentum_extended_capital_threshold: 50000000000  # 股本門檻（50e = 500億）
+  momentum_extended_price_min: 100.0  # 價格下限
+  momentum_extended_price_max: 500.0  # 價格上限
+
+  # ============================================================
+  # 停利條件（V6.1 + V7.1 優化版）
+  # ============================================================
+  # 條件3: 力竭停利（Ratio 峰值回落 + 價格回落）
+  ratio_column: "ratio_15s_300s"  # 實際是 ratio_15s_300s（無加權），用於進場條件
+  peak_tracking_delay: 3.0   # 延遲 N 秒後開始追蹤峰值
+  exhaustion_drawdown: 0.20  # Ratio 下跌比例 (20%)
+  exhaustion_price_drawdown_ticks: 2  # 價格需回落 N ticks 才觸發力竭
+
+  # V6.1：時間邊界向上取整
+  # 確保毫秒邊界正確處理，例如 37.102s + 3s = 40.102s → 41s
+  exhaustion_time_rounding_enabled: true
+
+  # V7：爆量創新高重置設定（持倉期間若出現爆量創新高，重置力竭追蹤）
+  # 這可以避免在動能持續時過早出場
+  exhaustion_breakout_reset_enabled: true  # 是否啟用爆量創新高重置
+  exhaustion_breakout_ratio_threshold: 5.5 # 爆量門檻（ratio >= 此值視為爆量）
+  exhaustion_breakout_price_new_high: true # 是否需要價格創新高才重置
+
+  # V7.1：True Breakout 嚴格判斷
+  # 避免「價漲量縮」時錯誤重置追蹤
+  # true: 價格創新高 + ratio >= threshold + ratio >= peak_ratio 才重置
+  # false: 價格創新高 + ratio >= threshold 就重置
+  exhaustion_require_ratio_exceed_peak: true
+
+  # ============================================================
+  # 雙峰部位放大設定
+  # ============================================================
+  # 當股票形成「雙峰」模式時，突破 day high 部位放大
+  # 雙峰定義：
+  #   - 兩個分鐘級別的高點
+  #   - 兩個高點價格差距 < double_peak_max_price_diff_pct
+  #   - 兩個高點間隔 >= double_peak_min_interval_minutes
+  # 範例：0920 高點 100.5，0950 高點 100.3（價差 0.2%，間隔 30 分鐘）→ 有效雙峰
+  double_peak_enabled: false             # 是否啟用雙峰部位放大
+  double_peak_multiplier: 1.5           # 部位放大倍數
+  double_peak_max_price_diff_pct: 0.8   # 兩峰最大價差 (%)
+  double_peak_min_interval_minutes: 20  # 兩峰最小間隔 (分鐘)
+
+  # ============================================================
+  # 時間採樣設定（降低高頻出場判斷）
+  # ============================================================
+  # 啟用後，出場判斷將以固定時間週期為基準，而非逐 tick 判斷
+  # 可避免因瞬間價格波動（如 1815）而頻繁觸發停損
+  #
+  # 範例：exit_sampling_interval=1.0 表示每 1 秒才判斷一次出場
+  #       在這 1 秒內的價格波動不會觸發停損
+  exit_sampling_enabled: false           # 是否啟用出場採樣
+  exit_sampling_interval: 1.0            # 出場採樣間隔（秒）
+  exit_sampling_price_type: "last"       # 採樣價格類型:
+                                         #   "last" - 使用採樣週期內最後價格（預設）
+                                         #   "low"  - 使用採樣週期內最低價（更保守）
+                                         #   "high" - 使用採樣週期內最高價
+
+  # ============================================================
+  # 策略 A 專用設定（力竭前提條件）
+  # ============================================================
+  # 只有在「急拉」狀態下才使用力竭判斷
+  # 急拉定義：2 分鐘振幅 > N%
+  exhaustion_require_surge: true         # 是否要求急拉才觸發力竭
+  exhaustion_surge_threshold: 1.4        # 急拉振幅門檻 (%)
+
+  # ============================================================
+  # 策略 B 專用設定（簡單趨勢策略）
+  # ============================================================
+  # 停損：Day High 突破價格往下 N ticks（根據 tick size 分兩組）
+  # 小 tick 組：0.01/0.05/0.1/1 跳動
+  # 大 tick 組：0.5/5 跳動
+  strategy_b_stop_loss_ticks_small: 3    # 小 tick（0.01/0.05/0.1/1）停損 4 ticks
+  strategy_b_stop_loss_ticks_large: 2   # 大 tick（0.5/5）停損 3 ticks
+
+  # 停利：破 rolling N 分鐘低點
+  strategy_b_trailing_stop_minutes: 3  # 3 分鐘（從 5 分鐘改為 3 分鐘）
+
+  # 第二階段出場：破 rolling N 分鐘低點
+  strategy_b_second_stage_minutes: 5    # 5 分鐘（與第一階段相同）
+
+  # 出場模式
+  exit_mode: "day_high"
+
+  # Day High 回檔停利（第一段）
+  day_high_drawdown_threshold: 0.0086   # 0.64%
+
+
+  # ============================================================
+  # Feature 計算開關（臨時功能）
+  # ============================================================
+  # 當 Feature parquet 尚未包含 low_15m 時，啟用此選項讓程式自己計算
+  # 當 Feature 更新後包含 low_15m，將此選項設為 false
+  calculate_low_15m_enabled: false        # true=程式自己計算, false=從Feature讀取
+
+  # ============================================================
+  # 移動停利設定（新版：多級別移動停利）
+  # ============================================================
+  # 基於不同時間框架的低點進行分批出場
+  trailing_stop:
+    enabled: true                     # 是否啟用新版移動停利
+    levels:                          # 停利級別設定
+      - name: '1min'
+        field: 'low_1m'              # 使用1分鐘低點
+        exit_ratio: 0.333            # 出場1/3部位
+      - name: '3min'
+        field: 'low_3m'              # 使用3分鐘低點
+        exit_ratio: 0.333            # 出場1/3部位
+      - name: '5min'
+        field: 'low_5m'              # 使用5分鐘低點
+        exit_ratio: 0.334            # 出場剩餘部位
+    entry_price_protection: true     # 啟用進場價保護（跌破進場價全部出場）
+
+  # ============================================================
+  # VWAP 乖離出場設定
+  # ============================================================
+  # 當持倉價格與 VWAP 的正向乖離超過門檻時，全倉出場
+  # 乖離率 = (price - vwap) / vwap * 100
+  vwap_deviation_exit_enabled: false     # 是否啟用 VWAP 乖離出場
+  vwap_deviation_threshold: 2.0          # 乖離率門檻 (%)，超過此值觸發出場
+  vwap_column: "vwap"                    # 使用的 VWAP 欄位名稱
+
+  # ============================================================
+  # 觀察訊號標記設定（僅標記，不觸發出場）
+  # ============================================================
+  # 訊號 1：價漲量縮標記
+  # 持倉期間價格創新高，但往回看 N 秒的外盤成交金額相對進場時縮了 M 倍
+  volume_shrink_signal_enabled: true     # 是否啟用價漲量縮標記
+  volume_shrink_lookback_seconds: 5      # 往回看的秒數
+  volume_shrink_ratio: 5.0               # 縮量倍數門檻（當前5s金額 < 進場5s金額 / 此值）
+
+  # 訊號 2：VWAP 乖離標記（共用 vwap_deviation_threshold 和 vwap_column）
+  vwap_deviation_signal_enabled: false    # 是否啟用 VWAP 乖離標記（僅標記，不出場）
+
+  # 舊版移動停利設定（保留但預設關閉）
+  trailing_profit_enabled: false           # 是否啟用舊版移動停利
+  trailing_profit_ratio: 0.986         # 移動停利比率（0.99 = 跌破1分鐘高點的99%）
+  trailing_profit_exit_ratio: 0.5         # 移動停利觸發時出場的部位比例（0.5 = 50%）
+
+  # ============================================================
+  # 3分鐘高點回檔出場設定（新增）
+  # ============================================================
+  # 當部分出場後，若價格從3分鐘高點回檔超過門檻，則出場剩餘部位
+  high_3min_drawdown_enabled: true        # 是否啟用3分鐘高點回檔出場
+  high_3min_drawdown_threshold: 0.025     # 3分鐘高點回檔門檻（0.025 = 2.5%）
+
+  # ============================================================
+  # 停損次數限制設定（新增）
+  # ============================================================
+  # 當停損次數達到上限後，停止進場
+  stop_loss_limit_enabled: false           # 是否啟用停損次數限制
+  max_stop_loss_count: 2                 # 最大停損次數
+  stop_loss_reset_on_win: false           # 是否在獲利後重置停損計數
+
+  # ============================================================
+  # Ratio 門檻遞增設定（新增）
+  # ============================================================
+  # 停損後下一筆進場的 ratio 必須大於前一次進場的數值或最小門檻（取較大者）
+  ratio_increase_after_loss_enabled: true # 是否啟用停損後 ratio 門檻遞增
+  ratio_increase_multiplier: 0.8          # ratio 門檻倍數（1.0 = 必須大於前次）
+  ratio_increase_min_threshold: 6.0       # 停損後的最小 ratio 門檻（會與前次進場 ratio 取較小值/OR）
+
+# 收盤價設定
+close_prices:
+  file: "close.parquet"  # 收盤價檔案（相對路徑）
+
+# ============================================================
+# 輸出設定
+# ============================================================
+output:
+  record_ticks: true          # 記錄所有 tick 資料（用於回測）
+  output_dir: "logs"          # 日誌和訊號輸出目錄
+
+  # 圖表輸出設定
+  generate_html: true         # 是否生成 HTML 圖表
+  generate_png: true          # 是否生成 PNG 圖片（除了 HTML 之外）
+  png_output_dir: "D:\\回測結果"  # PNG 圖片輸出目錄
+
+  # 圖表模式
+  # "full"       = 完整回測圖（5子圖 + 進出場標記）
+  # "price_only" = 純走勢圖（價格 + Ratio，無進出場標記）
+  chart_mode: "price_only"
+
+  # Parquet 資料儲存設定
+  save_backtest_data: true    # 是否儲存回測資料為 parquet
+  backtest_data_dir: "D:\\回測結果"  # 回測資料儲存目錄
+
+# 數據路徑設定（可選）
+data:
+  # 預設使用 _11_tick_backtest/Backtest_tick_module/data/feature/{date}/
+  # 若需自訂路徑，取消下面的註解
+  # feature_dir: "C:/path/to/feature/data"

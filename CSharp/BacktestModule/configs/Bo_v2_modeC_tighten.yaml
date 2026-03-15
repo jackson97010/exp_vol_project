@@ -1,0 +1,177 @@
+
+# 場景 C-tighten: Mode C 掛單停利 + Stage1 後收緊停損
+# 與 Bo_v2_modeC.yaml 相同，差異：
+#   - exit_mode_c.tighten_stop_after_stage1: true
+#     Stage 1 出場後，硬停損 ticks 減 1 (大型股: 2→1, 小型股: 3→2)
+
+strategy:
+  strategy_mode: "B"
+  entry_start_time: "09:09:00"
+  entry_cutoff_time: "13:00:00"
+
+  entry_cooldown: 30.0
+  above_open_check_enabled: false
+  ask_bid_ratio_threshold: 1.0
+  massive_matching_enabled: true
+  massive_matching_amount: 5_0000_000
+
+  use_dynamic_liquidity_threshold: true
+  dynamic_liquidity_threshold_file: "daily_liquidity_threshold.parquet"
+  dynamic_liquidity_multiplier: 1.0
+  dynamic_liquidity_threshold_cap: 50_000_000
+
+  ratio_entry_enabled: true
+  ratio_entry_threshold: 3
+
+  interval_pct_filter_enabled: true
+  interval_pct_minutes: 5
+  interval_pct_threshold: 3.0
+
+  breakout_quality_check_enabled: false
+  breakout_min_volume: 10
+  breakout_min_ask_eat_ratio: 0.25
+  breakout_absolute_large_volume: 50
+
+  small_order_filter_enabled: false
+  small_order_check_trades: 30
+  small_order_threshold: 3
+  tiny_order_threshold: 2
+  single_order_threshold: 1
+  small_order_ratio_limit: 0.8
+  tiny_order_ratio_limit: 0.5
+  single_order_ratio_limit: 0.4
+  require_large_order_confirmation: false
+  large_order_threshold: 20
+  min_large_orders: 2
+
+  low_10min_filter_enabled: false
+  low_10min_threshold: 4.0
+
+  entry_buffer_enabled: true
+  entry_buffer_milliseconds: 100
+
+  reentry: false
+  time_settings: "3s"
+
+  output_path: "D:/回測結果/C#版本"
+
+  grace_period: 3.0
+
+  price_stop_loss_ticks: 3
+  momentum_stop_loss_seconds: 15.0
+  momentum_stop_loss_seconds_extended: 30.0
+  momentum_stop_loss_amount: 5000000
+  momentum_extended_capital_threshold: 50000000000
+  momentum_extended_price_min: 100.0
+  momentum_extended_price_max: 500.0
+
+  ratio_column: "ratio_15s_300s"
+  peak_tracking_delay: 3.0
+  exhaustion_drawdown: 0.20
+  exhaustion_price_drawdown_ticks: 2
+  exhaustion_time_rounding_enabled: true
+  exhaustion_breakout_reset_enabled: true
+  exhaustion_breakout_ratio_threshold: 5.5
+  exhaustion_breakout_price_new_high: true
+  exhaustion_require_ratio_exceed_peak: true
+
+  double_peak_enabled: false
+  double_peak_multiplier: 1.5
+  double_peak_max_price_diff_pct: 0.8
+  double_peak_min_interval_minutes: 20
+
+  exit_sampling_enabled: false
+  exit_sampling_interval: 1.0
+  exit_sampling_price_type: "last"
+
+  exhaustion_require_surge: true
+  exhaustion_surge_threshold: 1.4
+
+  strategy_b_stop_loss_ticks_small: 3
+  strategy_b_stop_loss_ticks_large: 2
+  strategy_b_trailing_stop_minutes: 3
+  strategy_b_second_stage_minutes: 5
+  exit_mode: "day_high"
+  day_high_drawdown_threshold: 0.0086
+
+  calculate_low_15m_enabled: false
+
+  # ============================================================
+  # 移動停利：啟用（會被 Mode C 自動停用）
+  # ============================================================
+  trailing_stop:
+    enabled: true
+    levels:
+      - name: '1min'
+        field: 'low_1m'
+        exit_ratio: 0.333
+      - name: '3min'
+        field: 'low_3m'
+        exit_ratio: 0.333
+      - name: '5min'
+        field: 'low_5m'
+        exit_ratio: 0.334
+    entry_price_protection: true
+
+  vwap_deviation_exit_enabled: false
+  vwap_deviation_threshold: 2.0
+  vwap_column: "vwap"
+
+  volume_shrink_signal_enabled: true
+  volume_shrink_lookback_seconds: 5
+  volume_shrink_ratio: 5.0
+  vwap_deviation_signal_enabled: false
+
+  trailing_profit_enabled: false
+  trailing_profit_ratio: 0.986
+  trailing_profit_exit_ratio: 0.5
+
+  high_3min_drawdown_enabled: true
+  high_3min_drawdown_threshold: 0.025
+
+  stop_loss_limit_enabled: false
+  max_stop_loss_count: 2
+  stop_loss_reset_on_win: false
+
+  ratio_increase_after_loss_enabled: true
+  ratio_increase_multiplier: 0.8
+  ratio_increase_min_threshold: 6.0
+
+  # ============================================================
+  # 大壓單出場：啟用（Mode C Stage 0→1 觸發源）
+  # ============================================================
+  ask_wall_exit_enabled: true
+  ask_wall_dominance_ratio: 3.0
+  ask_wall_min_amount_floor: 1000000
+  ask_wall_bid_ask_ratio: 2.0
+  ask_wall_vwap_deviation: 1.8
+  ask_wall_confirm_seconds: 15.0
+  ask_wall_exit_ratio: 0.333
+
+  # ============================================================
+  # Mode C 掛單停利：啟用（三階段分批出場）
+  # ============================================================
+  # Stage 0→1: ask wall 出場 1/3 OR fallback 跌破 low_1m 1/3
+  # Stage 1→2: price < vwap_5m × (1 - deviation_pct%) 出場 1/3
+  # Stage 2→3: price ≤ low_3m 出場剩餘
+  exit_mode_c:
+    enabled: true
+    vwap_5m_deviation_pct: 0.3
+    vwap_5m_column: vwap_5m
+    stage1_exit_ratio: 0.333
+    stage2_exit_ratio: 0.333
+    stage3_exit_ratio: 1.0
+    tighten_stop_after_stage1: true
+
+close_prices:
+  file: "close.parquet"
+
+output:
+  record_ticks: true
+  output_dir: "logs"
+  generate_html: true
+  generate_png: true
+  png_output_dir: "D:\\回測結果"
+  chart_mode: "price_only"
+  save_backtest_data: true
+  backtest_data_dir: "D:\\回測結果"

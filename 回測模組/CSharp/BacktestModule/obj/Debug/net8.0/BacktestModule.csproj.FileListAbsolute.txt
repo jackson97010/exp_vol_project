@@ -1,6 +1,0 @@
-C:\Users\user\Documents\_15_預估量\exp_vol_project\回測模組\CSharp\BacktestModule\obj\Debug\net8.0\BacktestModule.csproj.AssemblyReference.cache
-C:\Users\user\Documents\_15_預估量\exp_vol_project\回測模組\CSharp\BacktestModule\obj\Debug\net8.0\BacktestModule.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\user\Documents\_15_預估量\exp_vol_project\回測模組\CSharp\BacktestModule\obj\Debug\net8.0\BacktestModule.AssemblyInfoInputs.cache
-C:\Users\user\Documents\_15_預估量\exp_vol_project\回測模組\CSharp\BacktestModule\obj\Debug\net8.0\BacktestModule.AssemblyInfo.cs
-C:\Users\user\Documents\_15_預估量\exp_vol_project\回測模組\CSharp\BacktestModule\obj\Debug\net8.0\BacktestModule.csproj.CoreCompileInputs.cache
-C:\Users\user\Documents\_15_預估量\exp_vol_project\回測模組\CSharp\BacktestModule\obj\Debug\net8.0\BacktestModule.sourcelink.json

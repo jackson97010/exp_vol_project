@@ -1,0 +1,5 @@
+D:\03_預估量相關資量\CSharp\obj\Debug\net8.0\test_fix_demo.GeneratedMSBuildEditorConfig.editorconfig
+D:\03_預估量相關資量\CSharp\obj\Debug\net8.0\test_fix_demo.AssemblyInfoInputs.cache
+D:\03_預估量相關資量\CSharp\obj\Debug\net8.0\test_fix_demo.AssemblyInfo.cs
+D:\03_預估量相關資量\CSharp\obj\Debug\net8.0\test_fix_demo.csproj.CoreCompileInputs.cache
+D:\03_預估量相關資量\CSharp\obj\Debug\net8.0\test_fix_demo.sourcelink.json

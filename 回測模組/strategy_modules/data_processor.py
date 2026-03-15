@@ -408,3 +408,68 @@ class DataProcessor:
             df.sort_values('time', inplace=True)
 
         return True
+
+    def load_and_prepare_vwap_data(self, stock_id: str, date: str) -> pd.DataFrame:
+        """
+        載入並準備 VWAP 回測資料（保留 Trade + Depth 全部資料）
+
+        與 process_trade_data 不同，此方法保留所有 Depth 紀錄，
+        以供 VWAP 迴圈中即時更新委託簿模擬器。
+
+        Args:
+            stock_id: 股票代碼
+            date: 日期 (YYYY-MM-DD)
+
+        Returns:
+            包含 Trade 和 Depth 的完整 DataFrame，掛單欄位已 forward-fill
+        """
+        feature_path = f'D:/feature_data/feature/{date}/{stock_id}.parquet'
+
+        if not os.path.exists(feature_path):
+            logger.error(f"檔案不存在: {feature_path}")
+            return pd.DataFrame()
+
+        logger.info(f"載入 VWAP 資料: {feature_path}")
+        df = pd.read_parquet(feature_path)
+
+        # 轉換時間欄位
+        if 'time' in df.columns:
+            df['time'] = pd.to_datetime(df['time'])
+        else:
+            logger.error("資料中沒有 'time' 欄位")
+            return pd.DataFrame()
+
+        # 排序
+        df = df.sort_values('time').reset_index(drop=True)
+
+        # 篩選交易時段 (09:00-13:30)
+        df = df[
+            (df['time'].dt.time >= pd.Timestamp('09:00:00').time()) &
+            (df['time'].dt.time <= pd.Timestamp('13:30:00').time())
+        ].copy()
+
+        if 'type' not in df.columns:
+            logger.warning("資料中沒有 'type' 欄位，假設全部為 Trade 資料")
+            return df
+
+        # 將 Trade 資料中的掛單欄位值從 0 改為 NaN（讓 Depth 值可以 ffill 覆蓋）
+        order_book_columns = [
+            'bid1_volume', 'bid2_volume', 'bid3_volume', 'bid4_volume', 'bid5_volume',
+            'ask1_volume', 'ask2_volume', 'ask3_volume', 'ask4_volume', 'ask5_volume',
+            'bid_volume_5level', 'ask_volume_5level', 'bid_ask_ratio'
+        ]
+
+        trade_mask = df['type'] == 'Trade'
+        for col in order_book_columns:
+            if col in df.columns:
+                df.loc[trade_mask, col] = df.loc[trade_mask, col].replace(0, np.nan)
+
+        # 向前填充掛單資料欄位
+        for col in order_book_columns:
+            if col in df.columns:
+                df[col] = df[col].ffill()
+
+        trade_count = trade_mask.sum()
+        depth_count = (~trade_mask).sum()
+        logger.info(f"VWAP 資料載入完成: Trade={trade_count}, Depth={depth_count}, 總計={len(df)}")
+        return df

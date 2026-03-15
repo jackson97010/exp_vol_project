@@ -1,0 +1,15 @@
+D:\03_預估量相關資量\CSharp\FixDemo\bin\Debug\net8.0\FixDemo.exe
+D:\03_預估量相關資量\CSharp\FixDemo\bin\Debug\net8.0\FixDemo.deps.json
+D:\03_預估量相關資量\CSharp\FixDemo\bin\Debug\net8.0\FixDemo.runtimeconfig.json
+D:\03_預估量相關資量\CSharp\FixDemo\bin\Debug\net8.0\FixDemo.dll
+D:\03_預估量相關資量\CSharp\FixDemo\bin\Debug\net8.0\FixDemo.pdb
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\FixDemo.GeneratedMSBuildEditorConfig.editorconfig
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\FixDemo.AssemblyInfoInputs.cache
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\FixDemo.AssemblyInfo.cs
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\FixDemo.csproj.CoreCompileInputs.cache
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\FixDemo.sourcelink.json
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\FixDemo.dll
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\refint\FixDemo.dll
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\FixDemo.pdb
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\FixDemo.genruntimeconfig.cache
+D:\03_預估量相關資量\CSharp\FixDemo\obj\Debug\net8.0\ref\FixDemo.dll
